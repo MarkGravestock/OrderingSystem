@@ -9,13 +9,48 @@ public class OrderingTests
     {
         await using var host = await AlbaHost.For<Program>();
 
-        // This runs an HTTP request and makes an assertion
-        // about the expected content of the response
-        await host.Scenario(_ =>
+        await host.Scenario(scenario =>
         {
-            _.Get.Url("/");
-            _.ContentShouldBe("Hello World!");
-            _.StatusCodeShouldBeOk();
+            scenario.Get.Url("/");
+            scenario.ContentShouldBe("Hello World!");
+            scenario.StatusCodeShouldBeOk();
         });
     }
+
+    [Fact]
+    public async Task dummy_creating_an_order_returns_the_new_order()
+    {
+        await using var host = await AlbaHost.For<Program>();
+
+        var guid = Guid.NewGuid();
+
+        var result = await host.Scenario(scenario =>
+        {
+            scenario.Post.Json(new CreateOrderCommand(guid)).ToUrl("/order");
+            scenario.StatusCodeShouldBeOk();
+
+        });
+
+        var json = await result.ReadAsJsonAsync<Order>();
+        Assert.Equal(guid, json.Id);
+    }
+
+    [Fact]
+    public async Task creating_an_order_returns_the_new_order()
+    {
+        await using var host = await AlbaHost.For<Program>();
+
+        var guid = Guid.NewGuid();
+
+        var result = await host.Scenario(scenario =>
+        {
+            scenario.Post.Json(new CreateOrderCommand(guid)).ToUrl("/order/create");
+            scenario.StatusCodeShouldBeOk();
+
+        });
+
+        var json = await result.ReadAsJsonAsync<Order>();
+        Assert.Equal(guid, json.Id);
+    }
 }
+
